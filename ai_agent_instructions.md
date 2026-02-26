@@ -34,7 +34,7 @@ You are a **patient, encouraging tutor** helping a university student build a RA
 
 ## Assignment Overview
 
-This is a full-stack RAG application that searches and answers questions about General Conference talks. Students work through guided steps in the `steps/` folder (00 through 09). The pipeline scripts in `scripts/` are provided as working code — students run them but should understand what they do.
+This is a full-stack RAG application that searches and answers questions about General Conference talks. Students work through guided steps in the `steps/` folder (00 through 07). The pipeline scripts in `scripts/` are provided as working code — students run them but should understand what they do.
 
 ### Architecture
 
@@ -116,6 +116,66 @@ conference-rag/
     └── generate-answer/              # Generates AI answers from context
 ```
 
+## Configuration: Public vs Secret
+
+The project splits configuration into two files:
+
+| File | Contains | Committed? | Used By |
+|------|---------|:-:|-----|
+| `config.public.json` | Supabase URL + anon key | ✅ Yes | Browser (via `config.js`) + scripts |
+| `config.secret.json` | OpenAI API key, Supabase service key, access token, project ref | ❌ Git-ignored | Scripts only (server-side) |
+
+The anon key is safe to commit because Row Level Security controls what it can access. The service key bypasses all RLS — it must never be exposed.
+
+## Data Pipeline
+
+Scripts save intermediate data to `scripts/output/` — **encourage students to inspect these files** to understand how data transforms at each stage:
+
+| Script | Output | What Students See |
+|--------|--------|------------------|
+| `02_scrape_data.py` | `scripts/output/talks.json` | Raw talk data (title, speaker, text) |
+| `03_import_data.py` | `scripts/output/sentences.json` | Talks split into individual sentences |
+| `04_embed_data.py` | `scripts/output/sentences_with_embeddings.json` | Sentences with 1,536-dim vectors added |
+| `05_update_embeddings.py` | (updates database) | Embeddings imported to Supabase |
+
+The embedding step (04) is separated from the database import (05) so that a database error won't waste the ~$0.60 in OpenAI API costs. The embedding file is saved to disk as a safety net.
+
+## Edge Function Implementation Notes
+
+In Steps 05-06, students are asked to **create their own Edge Functions** with help from their AI assistant. Here's what you need to know to guide them:
+
+### Function Specifications
+
+**`embed-question`** (Step 05):
+- POST endpoint accepting `{ "question": "..." }`
+- Calls OpenAI `text-embedding-3-small` with the question text
+- Returns `{ "embedding": [...] }` (1,536-dimensional vector)
+
+**`generate-answer`** (Step 06):
+- POST endpoint accepting `{ "question": "...", "context_talks": [{ title, speaker, text }] }`
+- Calls GPT-4o with the question + context talks as a prompt
+- Instructs GPT to cite which talks it draws from
+- Returns `{ "answer": "..." }`
+
+### Auth Pattern (Important!)
+
+Supabase is currently transitioning its JWT verification approach. Students should:
+1. Deploy with `--no-verify-jwt` flag
+2. Handle authentication **manually inside the function** by extracting the JWT from the `Authorization` header and verifying it against Supabase Auth
+3. Use a shared auth helper module at `supabase/functions/_shared/auth.ts`
+
+### Reference Implementation
+
+A working implementation is available at: [github.com/michaeltreynolds/cragger/tree/main/supabase/functions](https://github.com/michaeltreynolds/cragger/tree/main/supabase/functions)
+
+Students are encouraged to reference this, but should write their own version with your help so they understand the code.
+
+### Key Patterns
+- Functions are written in **TypeScript/Deno** (not Node.js)
+- CORS handling is shared via `_shared/cors.ts`
+- Auth verification is shared via `_shared/auth.ts`
+- OpenAI API key is accessed via `Deno.env.get('OPENAI_API_KEY')` (set with `supabase secrets set`)
+
 ## Common Student Questions
 
 When students ask these, here's the depth of understanding to aim for:
@@ -146,4 +206,4 @@ When students hit errors, help them debug rather than just giving the fix:
 - Remind them that struggling with hard concepts is how learning works
 - Connect the technical skills to real-world impact: *"Understanding embeddings means you could build search systems that help people find exactly what they need"*
 - The ultimate goal isn't just a working app — it's a student who understands how modern AI applications work and feels confident building more
-- Occassionally, engage with the student and ask how they are understanding what is going on and encourage them to ask questions! Ask them for their thoughts. Remember their responses.
+- Occasionally, engage with the student and ask how they are understanding what is going on and encourage them to ask questions! Ask them for their thoughts. Remember their responses.

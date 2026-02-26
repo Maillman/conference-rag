@@ -17,6 +17,8 @@
 
 Keyword search is powerful, but it only finds exact matches. Try searching for *"How can I find peace during hard times?"* with keyword search — you probably won't get great results. Semantic search solves this by understanding **meaning**, not just words. After this step, that same question will find talks about comfort, hope, and overcoming trials.
 
+> 💪 **This is the biggest step in the assignment** — embedding generation, database updates, CLI setup, and edge function creation. Grab a snack while embeddings generate (~15 min). You've got this!
+
 ## What to Do
 
 ### Step 5a: Generate Embeddings
@@ -56,7 +58,7 @@ Similar sentences produce similar vectors. This is what enables semantic search 
 
 > 💡 **Ask your AI assistant**: *"What are the trade-offs between different chunking strategies in RAG systems? Why did we choose sentence-level chunking?"*
 
-### Step 5b: Create & Deploy the embed-question Edge Function
+### Step 5c: Create & Deploy the embed-question Edge Function
 
 Your app needs to call OpenAI's API to embed user questions, but you can't put your API key in client-side JavaScript (anyone could steal it). Edge Functions solve this:
 

@@ -57,12 +57,13 @@ You have two configuration files with different purposes:
 | `config.public.json` | Supabase URL + anon key | ✅ Yes — protected by RLS |
 | `config.secret.json` | API keys, service keys | ❌ Never — git-ignored |
 
-Copy the example files:
+Create your secret config from the template:
 
 ```bash
-cp config.public.example.json config.public.json
 cp config.secret.example.json config.secret.json
 ```
+
+`config.public.json` already exists with placeholder values — you'll fill it in during the next step.
 
 > ⚠️ **`config.secret.json` is in `.gitignore`** — it will never be committed to your repo. This is how we keep API keys safe!
 

@@ -101,4 +101,5 @@ Try searching for `"faith"` or `"temple"` — you should see results!
 
 ## 🎉 Milestone: First green light! Keyword Search works!
 
+> 💾 **Good time to commit!** `git add -A && git commit -m "Import conference data" && git push`
 ## → Next: [Step 05: Embeddings & Semantic Search](05_embeddings.md)

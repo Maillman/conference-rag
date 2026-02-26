@@ -96,7 +96,6 @@ conference-rag/
 │   ├── 04_embed_data.py        # Generate embeddings → scripts/output/ (💰 saved to disk!)
 │   ├── 05_update_embeddings.py # Update DB with embeddings (🧠 semantic!)
 │   └── output/                 # Intermediate data files (git-ignored)
-├── data/                       # Intermediate data (git-ignored, created by scripts)
 └── supabase/                   # Edge Functions (YOU create this with supabase init)
     └── functions/
         ├── _shared/            # Shared auth & CORS helpers

@@ -103,4 +103,6 @@ You should get an AI-generated answer with source citations!
 
 ## 🎉 Milestone: All lights green! Your RAG app is complete!
 
+> 💾 **Commit your work!** `git add -A && git commit -m "All search modes working" && git push`
+
 ## → Next: [Step 07: Make It Yours](07_make_it_yours.md)

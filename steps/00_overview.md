@@ -53,50 +53,19 @@ Your app has three search modes that **light up** as you complete each milestone
 5. **Row Level Security** — Database-level access control
 6. **Production Deployment** — Full-stack app on GitHub Pages + Supabase
 
-## Prerequisites
+## Before You Start
 
+**You'll need:**
 - [GitHub](https://github.com) account
 - [Supabase](https://supabase.com) account (free tier)
 - [OpenAI API key](https://platform.openai.com/api-keys) (~$0.60 usage)
 - Python 3.9+ installed locally
 - An AI coding assistant (pick one):
-  - **Antigravity** (VS Code-based IDE)
-  - **GitHub Copilot** (VS Code extension)
-  - **Cursor** (standalone IDE)
+  - **Antigravity** (VS Code-based IDE) — [antigravity.google](https://antigravity.google)
+  - **GitHub Copilot** (VS Code extension) — VS Code Marketplace
+  - **Cursor** (standalone IDE) — [cursor.com](https://cursor.com)
 
-## Setting Up Your Environment
-
-### 1. Install Python & Create a Virtual Environment
-
-```bash
-# Check Python is installed
-python --version
-
-# Create a virtual environment
-python -m venv .venv
-
-# Activate it
-# On Windows:
-.venv\Scripts\activate
-# On macOS/Linux:
-source .venv/bin/activate
-```
-
-### 2. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Set Up Your AI Assistant
-
-Install one of these in your code editor:
-
-- **Antigravity** — Download from [antigravity.google](https://antigravity.google), sign in
-- **GitHub Copilot** — Install from VS Code Marketplace, sign in with GitHub
-- **Cursor** — Download from [cursor.com](https://cursor.com)
-
-> 💡 **Pro tip**: Throughout this assignment, whenever you're stuck or curious, ask your AI assistant! For example:
+> 💡 **Pro tip**: Throughout this assignment, whenever you’re stuck or curious, ask your AI assistant! For example:
 > - *"What is a vector embedding?"*
 > - *"Why do we use cosine similarity instead of Euclidean distance?"*
 > - *"Explain what Row Level Security does in Supabase"*
