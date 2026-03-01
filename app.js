@@ -480,7 +480,7 @@ async function semanticSearch() {
 
     try {
         // Step 1: Get embedding
-        const embedding = await getEmbedding(query);
+        const { embedding } = await getEmbedding(query);
 
         // Step 2: Search for similar sentences
         const results = await searchSentences(embedding);
@@ -528,7 +528,10 @@ async function askQuestion() {
 
     try {
         // Step 1: Get embedding
-        const embedding = await getEmbedding(question);
+        const { embedding, cache_id, cached: embeddingCached } = await getEmbedding(question);
+        if (embeddingCached) {
+            console.log('✅ Embedding retrieved from cache!');
+        }
 
         // Step 2: Search for similar sentences
         const results = await searchSentences(embedding);
@@ -540,7 +543,10 @@ async function askQuestion() {
         const enrichedTalks = await fetchFullTalkText(topTalks);
 
         // Step 5: Generate answer with full context
-        const answer = await generateAnswer(question, enrichedTalks);
+        const { answer, cached: answerCached } = await generateAnswer(question, enrichedTalks, cache_id);
+        if (answerCached) {
+            console.log('✅ Answer retrieved from cache!');
+        }
 
         // Compute overall similarity (weighted avg across source talks)
         const overallSimilarity = topTalks.reduce((sum, t) => sum + t.avgSimilarity, 0) / topTalks.length;
@@ -593,7 +599,11 @@ async function getEmbedding(text) {
         throw new Error(data?.error || 'Failed to get embedding');
     }
 
-    return data.embedding;
+    return {
+        embedding: data.embedding,
+        cache_id: data.cache_id,
+        cached: data.cached
+    };
 }
 
 // Search sentences using vector similarity
@@ -681,11 +691,12 @@ async function fetchFullTalkText(talks) {
 }
 
 // Generate answer via Edge Function
-async function generateAnswer(question, contextTalks) {
+async function generateAnswer(question, contextTalks, cacheId) {
     const { data, error } = await supabaseClient.functions.invoke('generate-answer', {
         body: {
             question: question,
-            context_talks: contextTalks
+            context_talks: contextTalks,
+            cache_id: cacheId
         }
     });
 
@@ -693,7 +704,10 @@ async function generateAnswer(question, contextTalks) {
         throw new Error(data?.error || 'Failed to generate answer');
     }
 
-    return data.answer;
+    return {
+        answer: data.answer,
+        cached: data.cached
+    };
 }
 
 // ============================================

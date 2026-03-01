@@ -1,10 +1,12 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { verifyAuth } from "../_shared/auth.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 interface ContextTalk {
     title: string;
     speaker: string;
     text: string;
+    talk_id?: string;
 }
 
 Deno.serve(async (req) => {
@@ -14,11 +16,11 @@ Deno.serve(async (req) => {
     }
 
     try {
-        // Verify authentication
-        await verifyAuth(req);
+        // Verify authentication and get user ID
+        const { userId } = await verifyAuth(req);
 
         // Parse request body
-        const { question, context_talks } = await req.json();
+        const { question, context_talks, cache_id } = await req.json();
 
         if (!question || typeof question !== "string") {
             return new Response(
@@ -39,6 +41,39 @@ Deno.serve(async (req) => {
                 }
             );
         }
+
+        // Create Supabase client for cache operations
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+        // Check cache if cache_id provided
+        if (cache_id) {
+            const { data: cachedAnswer, error: cacheError } = await supabase
+                .from("question_cache")
+                .select("ai_answer")
+                .eq("id", cache_id)
+                .eq("user_id", userId)
+                .not("ai_answer", "is", null)
+                .single();
+
+            if (cachedAnswer && !cacheError) {
+                console.log("✅ Cache hit! Returning cached answer");
+                return new Response(
+                    JSON.stringify({ 
+                        answer: cachedAnswer.ai_answer,
+                        cached: true
+                    }),
+                    {
+                        status: 200,
+                        headers: { ...corsHeaders, "Content-Type": "application/json" },
+                    }
+                );
+            }
+        }
+
+        // Cache miss - generate new answer
+        console.log("⚡ Cache miss. Generating new answer with GPT-4o...");
 
         // Get OpenAI API key from environment
         const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
@@ -100,9 +135,33 @@ Please provide a thoughtful answer based on the conference talk excerpts above, 
         const data = await response.json();
         const answer = data.choices[0].message.content;
 
+        // Update cache with the generated answer
+        if (cache_id) {
+            const talk_ids = context_talks
+                .filter((talk: ContextTalk) => talk.talk_id)
+                .map((talk: ContextTalk) => talk.talk_id);
+
+            const { error: updateError } = await supabase
+                .from("question_cache")
+                .update({
+                    ai_answer: answer,
+                    context_talk_ids: talk_ids.length > 0 ? talk_ids : null,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("id", cache_id)
+                .eq("user_id", userId);
+
+            if (updateError) {
+                console.error("Failed to cache answer:", updateError);
+                // Don't fail the request if caching fails
+            } else {
+                console.log("💾 Answer cached successfully");
+            }
+        }
+
         // Return the generated answer
         return new Response(
-            JSON.stringify({ answer }),
+            JSON.stringify({ answer, cached: false }),
             {
                 status: 200,
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
